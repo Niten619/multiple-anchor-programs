@@ -1,0 +1,2 @@
+test_wallet_1_address: 7hprXFFYu23K8Bf3GSShabw2aDU5qPq7rkKPYx3vGzf2
+test_wallet_2_address: 754YeVWFHRZWDVJZxsmkxPQh5s2HS5wMX1sJ8K1N7P83
