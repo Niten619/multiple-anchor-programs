@@ -78,7 +78,7 @@ describe("spl-transfer", () => {
         test_wallet_2_keypair.publicKey,
         mint_address
     )
-    // add all 3 instruction to a transaction
+    // add all 5 instructions to a transaction
     const tnx = new anchor.web3.Transaction().add(
         mint_account_inx,  // instruction for creating mint account
         mint_init_inx,     // instruction for initializing mint account
