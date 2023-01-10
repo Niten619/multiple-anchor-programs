@@ -20,15 +20,15 @@ describe("spl-transfer", () => {
     Buffer.from(JSON.parse(readFileSync(test_wallet_1_path, "utf-8"))));
   const test_wallet_2_keypair = Keypair.fromSecretKey(
     Buffer.from(JSON.parse(readFileSync(test_wallet_2_path, "utf-8"))));
-  console.log("Test Wallet 1 pubkey:", test_wallet_1_keypair.publicKey)
-  console.log("Test Wallet 2 pubkey:", test_wallet_2_keypair.publicKey)
-    __dirname
+  console.log("Test Wallet 1 pubkey:", test_wallet_1_keypair.publicKey.toString())
+  console.log("Test Wallet 2 pubkey:", test_wallet_2_keypair.publicKey.toString())
+
   it("Spl Transfer Test!!!", async () => {
     
     // generate keypair for mint
     const mint_keypair = anchor.web3.Keypair.generate();
     const mint_address = mint_keypair.publicKey;
-    console.log("mint address:", mint_address)
+    console.log("mint address:", mint_address.toString())
     // instruction for creating mint account
     const mint_account_inx = anchor.web3.SystemProgram.createAccount({
         fromPubkey: anchor_wallet.publicKey,

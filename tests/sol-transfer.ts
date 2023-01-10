@@ -18,9 +18,9 @@ describe("sol-transfer", () => {
     Buffer.from(JSON.parse(readFileSync(test_wallet_1_path, "utf-8"))));
   const test_wallet_2_keypair = Keypair.fromSecretKey(
     Buffer.from(JSON.parse(readFileSync(test_wallet_2_path, "utf-8"))));
-  console.log("Test Wallet 1 pubkey:", test_wallet_1_keypair.publicKey)
-  console.log("Test Wallet 2 pubkey:", test_wallet_2_keypair.publicKey)
-    __dirname
+  console.log("Test Wallet 1 pubkey:", test_wallet_1_keypair.publicKey.toString())
+  console.log("Test Wallet 2 pubkey:", test_wallet_2_keypair.publicKey.toString())
+  
   it("Sol Transfer Test!!!", async () => {
     // Add your test here.
     const tx = await program.methods.transferSol(new BN(1000000000))
