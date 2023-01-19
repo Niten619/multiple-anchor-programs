@@ -7,6 +7,7 @@ spl_transfer = "HgwtqfhYZn2tRe4Ds8FCbF47qwWnJMj7T19tusZCm3eW"
 stream_withdraw_timelog = "6MX8LNw7iRBabJwiHDfc58MJMs79gkd4tQXtPquHLCEd"
 blogpost = "9AhbZutPv6fofCspsCthvCqKgars2b89T1TMueHxcGtX"
 voting = "3nzR5ZWMAvkePByUHiEFAnj3CsuVDbjs5VVdPZGUheqg"
+facebook_mini = "A1aAE7mJNJrDgqbGag1Qg2jEqYQghN6x7JqZv5n8kKxP"
 
 [registry]
 url = "https://api.apr.dev"
@@ -21,3 +22,4 @@ spl-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/spl-transfer.t
 timelog-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/stream-withdraw-timelog.ts"
 blogpost-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/blogpost.ts"
 voting-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/voting.ts"
+fbmini-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/facebook-mini.ts"
