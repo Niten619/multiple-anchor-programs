@@ -4,10 +4,12 @@ declare_id!("A1aAE7mJNJrDgqbGag1Qg2jEqYQghN6x7JqZv5n8kKxP");
 
 #[program]
 pub mod facebook_mini {
-
     use super::*;
 
     pub fn create_fb_account_and_post(ctx: Context<CreateFbAccount>, name: String, status: String) -> Result<()> {
+        msg!("Inside create_fb_account_and_post() function!");
+        msg!("name: {}", name);
+        msg!("status: {}", status);
         // check the size of the 'name' and 'status' to make sure it doesn't exceed the alloted space in the account created
         if name.as_bytes().len() > 10{
             msg!("Name should have less than 10 chars !!!");
@@ -21,6 +23,8 @@ pub mod facebook_mini {
         fb_acc.name = name;
         fb_acc.status = status;
         fb_acc.bump = *ctx.bumps.get("facebook-mini-account").unwrap();
+        msg!("fb_acc.name: {}", fb_acc.name);
+        msg!("fb_acc.status: {}", fb_acc.status);
         msg!("Congrats on creating your Facebook-Mini Account!!!");
         Ok(())
     }
@@ -47,25 +51,25 @@ pub mod facebook_mini {
 pub struct CreateFbAccount<'info> {
     // This is how you create a PDA with a custom seeds value
     #[account(init, payer=signer, space= 8 + (4 + 10) + (4 + 200) + 1, seeds= [b"facebook-mini-account", signer.key().as_ref()], bump)]
-    fb_account: Account<'info, FBAccountContent>,
+    pub fb_account: Account<'info, FBAccountContent>,
     #[account(mut)]
-    signer: Signer<'info>,
-    system_program: Program<'info, System>
+    pub signer: Signer<'info>,
+    pub system_program: Program<'info, System>
 }
 
 #[derive(Accounts)]
 pub struct UpdateFbStatus<'info> {
     // This is how you reuse an already created PDA
     #[account(mut, seeds= [b"facebook-mini-account", signer.key().as_ref()], bump=fb_account.bump)]
-    fb_account: Account<'info, FBAccountContent>,
-    signer: Signer<'info>
+    pub fb_account: Account<'info, FBAccountContent>,
+    pub signer: Signer<'info>
 }
 
 #[derive(Accounts)]
 pub struct DeleteFbAccount<'info> {
     #[account(mut, seeds= [b"facebook-mini-account", signer.key().as_ref()], bump=fb_account.bump, close=signer)]
-    fb_account: Account<'info, FBAccountContent>,
-    signer: Signer<'info>
+    pub fb_account: Account<'info, FBAccountContent>,
+    pub signer: Signer<'info>
 }
 
 #[account]
