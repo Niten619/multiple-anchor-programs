@@ -22,7 +22,7 @@ pub mod facebook_mini {
         let fb_acc = &mut ctx.accounts.fb_account;
         fb_acc.name = name;
         fb_acc.status = status;
-        fb_acc.bump = *ctx.bumps.get("facebook-mini-account").unwrap();
+        fb_acc.bump = *ctx.bumps.get("fb_account").unwrap();  //  here, "fb_account" is not a seed but the account from CreateFbAccount struct
         msg!("fb_acc.name: {}", fb_acc.name);
         msg!("fb_acc.status: {}", fb_acc.status);
         msg!("Congrats on creating your Facebook-Mini Account!!!");
@@ -50,7 +50,7 @@ pub mod facebook_mini {
 #[derive(Accounts)]
 pub struct CreateFbAccount<'info> {
     // This is how you create a PDA with a custom seeds value
-    #[account(init, payer=signer, space= 8 + (4 + 10) + (4 + 200) + 1, seeds= [b"facebook-mini-account", signer.key().as_ref()], bump)]
+    #[account(init_if_needed, payer=signer, space= 8 + (4 + 10) + (4 + 200) + 1, seeds= ["facebook-mini-account".as_bytes(), signer.key().as_ref()], bump)]
     pub fb_account: Account<'info, FBAccountContent>,
     #[account(mut)]
     pub signer: Signer<'info>,
@@ -62,6 +62,7 @@ pub struct UpdateFbStatus<'info> {
     // This is how you reuse an already created PDA
     #[account(mut, seeds= [b"facebook-mini-account", signer.key().as_ref()], bump=fb_account.bump)]
     pub fb_account: Account<'info, FBAccountContent>,
+    #[account(mut)]
     pub signer: Signer<'info>
 }
 
@@ -69,6 +70,7 @@ pub struct UpdateFbStatus<'info> {
 pub struct DeleteFbAccount<'info> {
     #[account(mut, seeds= [b"facebook-mini-account", signer.key().as_ref()], bump=fb_account.bump, close=signer)]
     pub fb_account: Account<'info, FBAccountContent>,
+    #[account(mut)]
     pub signer: Signer<'info>
 }
 
