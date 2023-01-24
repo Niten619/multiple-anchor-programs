@@ -2,7 +2,15 @@ import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
 import { StreamWithdrawTimelog } from "../target/types/stream_withdraw_timelog";
 import { Keypair, LAMPORTS_PER_SOL, SystemProgram } from "@solana/web3.js";
-import { TOKEN_PROGRAM_ID, MintLayout, getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, createInitializeMintInstruction, createMintToInstruction, AccountLayout } from "@solana/spl-token";
+import { 
+  TOKEN_PROGRAM_ID, 
+  MintLayout, 
+  getAssociatedTokenAddress, 
+  createAssociatedTokenAccountInstruction, 
+  createInitializeMintInstruction, 
+  createMintToInstruction, 
+  AccountLayout, 
+  getMinimumBalanceForRentExemptAccount } from "@solana/spl-token";
 import { readFileSync } from "fs";
 import { BN } from "bn.js";
 import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pubkey";
@@ -69,16 +77,18 @@ describe("stream-withdraw-timelog", async () => {
   const delay = ms => new Promise(res => setTimeout(res, ms));
 
   it("Stream Sol Test!!!", async () => {
+    const MINIMUM_BALANCE_FOR_RENT_EXEMPT = await getMinimumBalanceForRentExemptAccount(provider.connection);
+    console.log("MINIMUM_BALANCE_FOR_RENT_EXEMPT:", MINIMUM_BALANCE_FOR_RENT_EXEMPT)
     let test_wallet_1_balance = await provider.connection.getBalance(test_wallet_1_keypair.publicKey)/LAMPORTS_PER_SOL;
     console.log("test_wallet_1_balance before:", test_wallet_1_balance)
 
     // intruction for creating an account (vault account in this case)
     const vault_acc_inx = anchor.web3.SystemProgram.createAccount({
-        fromPubkey: anchor_wallet.publicKey,
-        newAccountPubkey: vault_keypair.publicKey,
-        lamports: 1_000_000_000,
-        space: 0,
-        programId: SystemProgram.programId
+      fromPubkey: anchor_wallet.publicKey,
+      newAccountPubkey: vault_keypair.publicKey,
+      lamports: MINIMUM_BALANCE_FOR_RENT_EXEMPT,
+      space: 0,
+      programId: SystemProgram.programId
     });
     // add intruction to a transaction and send it to the network
     const tnx = new anchor.web3.Transaction().add(vault_acc_inx);
@@ -88,6 +98,7 @@ describe("stream-withdraw-timelog", async () => {
         {preflightCommitment: "confirmed"}
     );
     console.log("tnx signature:", tnx_sig)
+
     let vault_account_balance = await provider.connection.getBalance(vault_keypair.publicKey)/LAMPORTS_PER_SOL;
     console.log("vault_account_balance before:", vault_account_balance)
 
@@ -144,7 +155,6 @@ describe("stream-withdraw-timelog", async () => {
     console.log("vault_account_balance after:", vault_account_balance)
     test_wallet_2_balance = await provider.connection.getBalance(test_wallet_2_keypair.publicKey)/LAMPORTS_PER_SOL;
     console.log("test_wallet_2_balance after:", test_wallet_2_balance)
-    
   });
 
   it("Stream Spl Test!!!", async () => {
