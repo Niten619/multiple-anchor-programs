@@ -1,2 +1,6 @@
-test_wallet_1_address: 7hprXFFYu23K8Bf3GSShabw2aDU5qPq7rkKPYx3vGzf2
+test_wallet_1_address: CmFKZ5McPNiRsE1sVbetj8Q3A4mmCCTkozQzr2n9fHFp
 test_wallet_2_address: 754YeVWFHRZWDVJZxsmkxPQh5s2HS5wMX1sJ8K1N7P83
+
+data_wallet: 7hprXFFYu23K8Bf3GSShabw2aDU5qPq7rkKPYx3vGzf2
+// This "data_wallet" account has 33 bytes of data space allocated. 
+// Using this account as "PAYER" for account creation or a simple "Transfer" instruction from this account may result in error. You can test for yourself. 
