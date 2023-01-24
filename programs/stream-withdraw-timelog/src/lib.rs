@@ -26,25 +26,25 @@ pub mod stream_withdraw_timelog {
     pub fn withdraw_sol(ctx: Context<WithdrawSol>, amount: u64) -> Result<()> {   
         // check whether the account trying to withdraw the stream amount is authorized or not
         if *ctx.accounts.receiver_account.key != ctx.accounts.timelog_account_sol.receiver_account.key(){
-            msg!("Unauthorized Account!!!");
-            return Err(error!(ErrorCode::InvalidProgramExecutable));
+            return Err(error!(ErrorTypes::UnauthorizedAccount));
         }
         // check whether the amount trying to be withdrawn is more than the streamed amount
         if amount > ctx.accounts.timelog_account_sol.amount{
-            msg!("Amount limit Overreached!!!");
+            return Err(error!(ErrorTypes::WithdrawLimitExceeded));
         }
         // get the latest timestamp
         let time_now = Clock::get()?.unix_timestamp as u64;
-        msg!("Time Now: {}", time_now);
+        msg!("Time Now (during Withdraw): {}", time_now);
+        msg!("Time Recorded (during Stream): {}", ctx.accounts.timelog_account_sol.start_time);
 
         // check whether the latest timestamp is 24 hours later than the start_time recorded at streaming
         // if time_now < ctx.accounts.timelog_account.start_time + (24 * 60 * 60){
             // msg!("24 hours has not passed from the time of stream!!!");
-            // return ErrorCode::InvalidProgramExecutable;
+            // return Err(error!(ErrorTypes::TimeNotPassed));
         // }
         if time_now < ctx.accounts.timelog_account_sol.start_time + 4{
             msg!("4 sec has not passed from the time of stream!!!");
-            return Err(error!(ErrorCode::InvalidProgramExecutable));
+            return Err(error!(ErrorTypes::TimeNotPassed));
         }
 
         let cpi_ctx_program = ctx.accounts.system_program.to_account_info();
@@ -78,12 +78,11 @@ pub mod stream_withdraw_timelog {
     pub fn withdraw_spl(ctx: Context<WithdrawSpl>, amount: u64) -> Result<()> {
         // check whether the account trying to withdraw the stream amount is authorized or not
         if ctx.accounts.receiver_ata.key() != ctx.accounts.timelog_account_spl.receiver_ata.key(){
-            msg!("Unauthorized Account!!!");
-            return Err(error!(ErrorCode::InvalidProgramExecutable));
+            return Err(error!(ErrorTypes::UnauthorizedAccount));
         }
         // check whether the amount trying to be withdrawn is more than the streamed amount
         if amount > ctx.accounts.timelog_account_spl.amount{
-            msg!("Amount limit Overreached!!!");
+            return Err(error!(ErrorTypes::WithdrawLimitExceeded));
         }
         // get the latest timestamp
         let time_now = Clock::get()?.unix_timestamp as u64;
@@ -91,11 +90,11 @@ pub mod stream_withdraw_timelog {
         // check whether the latest timestamp is 24 hours later than the start_time recorded at streaming
         // if time_now < ctx.accounts.timelog_account.start_time + (24 * 60 * 60){
             // msg!("24 hours has not passed from the time of stream!!!");
-            // return ErrorCode::InvalidProgramExecutable;
+            // return Err(error!(ErrorTypes::TimeNotPassed));
         // }
         if time_now < ctx.accounts.timelog_account_spl.start_time + 4{
             msg!("4 sec has not passed from the time of stream!!!");
-            return Err(error!(ErrorCode::InvalidProgramExecutable));
+            return Err(error!(ErrorTypes::TimeNotPassed));
         }
         let cpi_ctx_program = ctx.accounts.token_program.to_account_info();
         let transfer_struct = Token_Transfer{
@@ -190,4 +189,14 @@ pub struct TimeLogSpl{
     amount: u64,
     vault_ata: Pubkey,
     receiver_ata: Pubkey,
+}
+
+#[error_code]
+pub enum ErrorTypes {
+    #[msg("Unauthorized Account For Withdrawal")]
+    UnauthorizedAccount,
+    #[msg("Withdraw Amount more than Amount Streamed")]
+    WithdrawLimitExceeded,
+    #[msg("Expected Time Not Passed")]
+    TimeNotPassed
 }
