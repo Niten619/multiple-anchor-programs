@@ -1,7 +1,7 @@
 import * as anchor from "@project-serum/anchor";
 import { Program } from "@project-serum/anchor";
 import { StreamWithdrawTimelog } from "../target/types/stream_withdraw_timelog";
-import { Keypair, LAMPORTS_PER_SOL, SystemProgram } from "@solana/web3.js";
+import { Connection, Keypair, LAMPORTS_PER_SOL, SystemProgram } from "@solana/web3.js";
 import { 
   TOKEN_PROGRAM_ID, 
   MintLayout, 
@@ -18,6 +18,7 @@ import { findProgramAddressSync } from "@project-serum/anchor/dist/cjs/utils/pub
 describe("stream-withdraw-timelog", async () => {
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.env();
+  const connection = provider.connection;
   anchor.setProvider(provider);
   const program = anchor.workspace.StreamWithdrawTimelog as Program<StreamWithdrawTimelog>;
   const anchor_wallet = provider.wallet;
@@ -77,9 +78,9 @@ describe("stream-withdraw-timelog", async () => {
   const delay = ms => new Promise(res => setTimeout(res, ms));
 
   it("Stream Sol Test!!!", async () => {
-    const MINIMUM_BALANCE_FOR_RENT_EXEMPT = await getMinimumBalanceForRentExemptAccount(provider.connection);
+    const MINIMUM_BALANCE_FOR_RENT_EXEMPT = await getMinimumBalanceForRentExemptAccount(connection);
     console.log("MINIMUM_BALANCE_FOR_RENT_EXEMPT:", MINIMUM_BALANCE_FOR_RENT_EXEMPT)
-    let test_wallet_1_balance = await provider.connection.getBalance(test_wallet_1_keypair.publicKey)/LAMPORTS_PER_SOL;
+    let test_wallet_1_balance = await connection.getBalance(test_wallet_1_keypair.publicKey)/LAMPORTS_PER_SOL;
     console.log("test_wallet_1_balance before:", test_wallet_1_balance)
 
     // intruction for creating an account (vault account in this case)
@@ -99,7 +100,7 @@ describe("stream-withdraw-timelog", async () => {
     );
     console.log("tnx signature:", tnx_sig)
 
-    let vault_account_balance = await provider.connection.getBalance(vault_keypair.publicKey)/LAMPORTS_PER_SOL;
+    let vault_account_balance = await connection.getBalance(vault_keypair.publicKey)/LAMPORTS_PER_SOL;
     console.log("vault_account_balance before:", vault_account_balance)
 
     // get the timestamp at the time of stream
@@ -120,22 +121,22 @@ describe("stream-withdraw-timelog", async () => {
     .rpc();
     console.log("Your transaction signature", tx_signature)
 
-    vault_account_balance = await provider.connection.getBalance(vault_keypair.publicKey)/LAMPORTS_PER_SOL;
+    vault_account_balance = await connection.getBalance(vault_keypair.publicKey)/LAMPORTS_PER_SOL;
     console.log("vault_account_balance after:", vault_account_balance)
-    test_wallet_1_balance = await provider.connection.getBalance(test_wallet_1_keypair.publicKey)/LAMPORTS_PER_SOL;
+    test_wallet_1_balance = await connection.getBalance(test_wallet_1_keypair.publicKey)/LAMPORTS_PER_SOL;
     console.log("test_wallet_1_balance after:", test_wallet_1_balance)
     
   });
 
   it("Withdraw Sol Test!!!", async () => {
-    let test_wallet_2_balance = await provider.connection.getBalance(test_wallet_2_keypair.publicKey)/LAMPORTS_PER_SOL;
+    let test_wallet_2_balance = await connection.getBalance(test_wallet_2_keypair.publicKey)/LAMPORTS_PER_SOL;
     console.log("test_wallet_2_balance before:", test_wallet_2_balance)
 
     console.log("Waiting for 5 secs...")
     await delay(5000);
     console.log("5 secs Over")
 
-    let vault_account_balance = await provider.connection.getBalance(vault_keypair.publicKey)/LAMPORTS_PER_SOL;
+    let vault_account_balance = await connection.getBalance(vault_keypair.publicKey)/LAMPORTS_PER_SOL;
     console.log("vault_account_balance before:", vault_account_balance)
     // make an rpc call to the on-chain program
     const tx_signature = await program.methods
@@ -151,9 +152,9 @@ describe("stream-withdraw-timelog", async () => {
     .rpc();
     console.log("Your transaction signature", tx_signature)
 
-    vault_account_balance = await provider.connection.getBalance(vault_keypair.publicKey)/LAMPORTS_PER_SOL;
+    vault_account_balance = await connection.getBalance(vault_keypair.publicKey)/LAMPORTS_PER_SOL;
     console.log("vault_account_balance after:", vault_account_balance)
-    test_wallet_2_balance = await provider.connection.getBalance(test_wallet_2_keypair.publicKey)/LAMPORTS_PER_SOL;
+    test_wallet_2_balance = await connection.getBalance(test_wallet_2_keypair.publicKey)/LAMPORTS_PER_SOL;
     console.log("test_wallet_2_balance after:", test_wallet_2_balance)
   });
 
@@ -162,7 +163,7 @@ describe("stream-withdraw-timelog", async () => {
     const mint_acc_inx = anchor.web3.SystemProgram.createAccount({
       fromPubkey: anchor_wallet.publicKey,
       newAccountPubkey: mint_keypair.publicKey,
-      lamports: 1_000_000_000,
+      lamports: await connection.getMinimumBalanceForRentExemption(MintLayout.span),
       space: MintLayout.span,
       programId: TOKEN_PROGRAM_ID
     });
@@ -207,7 +208,12 @@ describe("stream-withdraw-timelog", async () => {
         test_wallet_1_keypair.publicKey,
         100_000_000_000
     );
-    // add all 3 instructions to a transaction
+    // add all the instructions to a transaction
+    /**
+     * Instruction should be in proper order. You cannot just pop them in randomly
+     * For eg: If you want to mint tokens into a particular ATA, that ATA creation instruction should be prior to the minting instruction.
+     *         In other words, ATA should already exist before you try to mint into that ATA
+     */
     const tnx = new anchor.web3.Transaction().add(
       mint_acc_inx,       // instruction for creating mint account
       mint_acc_init_inx,  // instruction for initializing the mint account
@@ -224,9 +230,9 @@ describe("stream-withdraw-timelog", async () => {
       );
     console.log("tnx signature:", tnx_sig)
 
-    let test_wallet_1_token_balance = await provider.connection.getTokenAccountBalance(wallet_1_ata_address);
+    let test_wallet_1_token_balance = await connection.getTokenAccountBalance(wallet_1_ata_address);
     console.log("test_wallet_1_token_balance before:", test_wallet_1_token_balance)
-    let vault_ata_balance = await provider.connection.getTokenAccountBalance(vault_ata_address);
+    let vault_ata_balance = await connection.getTokenAccountBalance(vault_ata_address);
     console.log("vault_ata_balance before:", vault_ata_balance)
 
     // make an rpc call to the on-chain program
@@ -245,9 +251,9 @@ describe("stream-withdraw-timelog", async () => {
     .rpc();
     console.log("Your transaction signature", tx)
 
-    test_wallet_1_token_balance = await provider.connection.getTokenAccountBalance(wallet_1_ata_address);
+    test_wallet_1_token_balance = await connection.getTokenAccountBalance(wallet_1_ata_address);
     console.log("test_wallet_1_token_balance after:", test_wallet_1_token_balance)
-    vault_ata_balance = await provider.connection.getTokenAccountBalance(vault_ata_address);
+    vault_ata_balance = await connection.getTokenAccountBalance(vault_ata_address);
     console.log("vault_ata_balance after:", vault_ata_balance)
   });
 
@@ -256,9 +262,9 @@ describe("stream-withdraw-timelog", async () => {
     await delay(5000);
     console.log("5 secs Over")
 
-    let vault_ata_balance = await provider.connection.getTokenAccountBalance(vault_ata_address);
+    let vault_ata_balance = await connection.getTokenAccountBalance(vault_ata_address);
     console.log("vault_ata_balance before:", vault_ata_balance)
-    let test_wallet_2_token_balance = await provider.connection.getTokenAccountBalance(wallet_2_ata_address);
+    let test_wallet_2_token_balance = await connection.getTokenAccountBalance(wallet_2_ata_address);
     console.log("test_wallet_2_token_balance before:", test_wallet_2_token_balance)
 
     // make an rpc call to the on-chain program
@@ -275,9 +281,9 @@ describe("stream-withdraw-timelog", async () => {
     .rpc();
     console.log("Your transaction signature", tx)
 
-    vault_ata_balance = await provider.connection.getTokenAccountBalance(vault_ata_address);
+    vault_ata_balance = await connection.getTokenAccountBalance(vault_ata_address);
     console.log("vault_ata_balance after:", vault_ata_balance)
-    test_wallet_2_token_balance = await provider.connection.getTokenAccountBalance(wallet_2_ata_address);
+    test_wallet_2_token_balance = await connection.getTokenAccountBalance(wallet_2_ata_address);
     console.log("test_wallet_2_token_balance after:", test_wallet_2_token_balance)
   });
 });
